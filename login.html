@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 · 굿즈 샵</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="auth-card">
+      <div class="tabs">
+        <button id="tab-login" class="active" onclick="switchTab('login')">로그인</button>
+        <button id="tab-signup" onclick="switchTab('signup')">회원가입</button>
+      </div>
+
+      <form id="auth-form" onsubmit="return submitForm(event)">
+        <label for="email">이메일</label>
+        <input id="email" type="email" placeholder="you@example.com" required />
+
+        <label for="password">비밀번호</label>
+        <input id="password" type="password" placeholder="6자 이상" minlength="6" required />
+
+        <div id="msg"></div>
+
+        <button class="btn" id="submit-btn" type="submit" style="margin-top:16px;">로그인</button>
+      </form>
+
+      <p class="hint">이메일 인증 없이 가입 즉시 이용할 수 있어요.</p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    let mode = "login";
+
+    function switchTab(m) {
+      mode = m;
+      document.getElementById("tab-login").classList.toggle("active", m === "login");
+      document.getElementById("tab-signup").classList.toggle("active", m === "signup");
+      document.getElementById("submit-btn").textContent = m === "login" ? "로그인" : "회원가입";
+      showMsg("");
+    }
+
+    function showMsg(text, type) {
+      const el = document.getElementById("msg");
+      el.innerHTML = text ? `<div class="msg ${type}">${text}</div>` : "";
+    }
+
+    async function submitForm(e) {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const btn = document.getElementById("submit-btn");
+      btn.disabled = true;
+
+      try {
+        if (mode === "signup") {
+          const { error } = await sb.auth.signUp({ email, password });
+          if (error) throw error;
+          // 이메일 인증이 꺼져 있으면 바로 세션이 생겨 로그인 상태가 됩니다.
+          const user = await getUser();
+          if (user) return (location.href = "index.html");
+          showMsg("가입 완료! 로그인 해주세요.", "ok");
+          switchTab("login");
+        } else {
+          const { error } = await sb.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          location.href = "index.html";
+        }
+      } catch (err) {
+        showMsg(translate(err.message), "error");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 자주 나오는 오류를 한글로
+    function translate(m) {
+      if (/Invalid login credentials/i.test(m)) return "이메일 또는 비밀번호가 올바르지 않습니다.";
+      if (/already registered/i.test(m)) return "이미 가입된 이메일입니다.";
+      if (/at least 6/i.test(m)) return "비밀번호는 6자 이상이어야 합니다.";
+      return m;
+    }
+
+    // 이미 로그인했다면 상품 페이지로
+    getUser().then((u) => { if (u) location.href = "index.html"; });
+  </script>
+</body>
+</html>

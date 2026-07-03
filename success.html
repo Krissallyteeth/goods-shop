@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>결제 확인 중 · 굿즈 샵</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="center-box" id="box">
+      <div class="icon">⏳</div>
+      <h1>결제를 확인하고 있어요…</h1>
+      <p>잠시만 기다려 주세요.</p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    confirmPayment();
+
+    async function confirmPayment() {
+      const q = new URLSearchParams(location.search);
+      const paymentKey = q.get("paymentKey");
+      const orderId = q.get("orderId");
+      const amount = q.get("amount");
+
+      const box = document.getElementById("box");
+
+      if (!paymentKey || !orderId || !amount) {
+        return render("⚠️", "잘못된 접근입니다.", "결제 정보가 없습니다.", false);
+      }
+
+      // Edge Function 호출 (로그인 토큰이 자동으로 함께 전송됩니다)
+      const { data, error } = await sb.functions.invoke("confirm-payment", {
+        body: { paymentKey, orderId, amount: Number(amount) },
+      });
+
+      if (error || (data && data.error)) {
+        const msg = (data && data.error) || (error && error.message) || "결제 승인에 실패했습니다.";
+        return render("❌", "결제에 실패했습니다", msg, false);
+      }
+
+      render("✅", "결제가 완료되었어요!", "이용해 주셔서 감사합니다.", true);
+
+      function render(icon, title, desc, ok) {
+        box.innerHTML =
+          `<div class="icon">${icon}</div>` +
+          `<h1>${title}</h1>` +
+          `<p>${desc}</p>` +
+          (ok
+            ? `<a class="btn" href="orders.html">내 결제내역 보기</a>`
+            : `<a class="btn secondary" href="index.html">상품으로 돌아가기</a>`);
+      }
+    }
+  </script>
+</body>
+</html>

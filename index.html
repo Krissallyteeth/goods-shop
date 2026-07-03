@@ -4,29 +4,101 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>굿즈 샵</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #fff;
-      text-align: center;
-    }
-    .box { padding: 2rem; }
-    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    p { opacity: 0.9; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="box">
-    <h1>🛍️ 굿즈 샵</h1>
-    <p>준비 중입니다. 곧 만나요!</p>
+  <div class="container">
+    <h1 class="page-title">상품</h1>
+    <div id="products" class="grid"></div>
+    <div id="empty" class="empty" style="display:none;">상품이 없습니다.</div>
   </div>
-  <!-- 결제/로그인 기능은 이후 단계에서 추가됩니다. -->
-  <!-- ⚠️ 이 폴더(public)에는 공개되어도 안전한 값만 둡니다. 비밀키 금지! -->
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://js.tosspayments.com/v1/payment"></script>
+  <script src="app.js"></script>
+  <script>
+    renderNav("index.html");
+    loadProducts();
+
+    async function loadProducts() {
+      const { data: products, error } = await sb
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at");
+
+      const box = document.getElementById("products");
+      if (error) {
+        box.innerHTML = `<div class="msg error">상품을 불러오지 못했습니다: ${error.message}</div>`;
+        return;
+      }
+      if (!products.length) {
+        document.getElementById("empty").style.display = "block";
+        return;
+      }
+
+      box.innerHTML = products
+        .map(
+          (p) => `
+          <div class="card">
+            <img src="${p.image_url}" alt="${escapeHtml(p.name)}" loading="lazy" />
+            <div class="body">
+              <h3>${escapeHtml(p.name)}</h3>
+              <p class="desc">${escapeHtml(p.description || "")}</p>
+              <div class="price">${won(p.price)}</div>
+              <button class="btn" onclick='buy(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${p.price})'>구매하기</button>
+            </div>
+          </div>`
+        )
+        .join("");
+    }
+
+    async function buy(productId, productName, price) {
+      // 1) 로그인 확인
+      const user = await getUser();
+      if (!user) {
+        alert("구매하려면 먼저 로그인 해주세요.");
+        location.href = "login.html";
+        return;
+      }
+
+      // 2) 고유 주문번호를 만들고 주문(PENDING)을 저장
+      const orderId = "order_" + crypto.randomUUID().replace(/-/g, "").slice(0, 20);
+      const { error } = await sb.from("orders").insert({
+        user_id: user.id,
+        product_id: productId,
+        amount: price,
+        status: "PENDING",
+        toss_order_id: orderId,
+      });
+      if (error) {
+        alert("주문 생성에 실패했습니다: " + error.message);
+        return;
+      }
+
+      // 3) 토스 결제창 호출 (성공/실패 시 아래 URL 로 돌아옵니다)
+      const toss = TossPayments(window.TOSS_CLIENT_KEY);
+      try {
+        await toss.requestPayment("카드", {
+          amount: price,
+          orderId: orderId,
+          orderName: productName,
+          successUrl: new URL("success.html", location.href).href,
+          failUrl: new URL("fail.html", location.href).href,
+          customerEmail: user.email,
+        });
+      } catch (e) {
+        // 사용자가 결제창을 닫은 경우 등 — 조용히 무시
+        if (e.code !== "USER_CANCEL") console.error(e);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+      );
+    }
+  </script>
 </body>
 </html>

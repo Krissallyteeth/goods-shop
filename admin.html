@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 · 굿즈 샵</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="page-title">관리자 · 전체 결제내역</h1>
+    <div id="content"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    renderNav("admin.html");
+    load();
+
+    async function load() {
+      const user = await requireLogin();
+      if (!user) return;
+
+      const box = document.getElementById("content");
+
+      // 관리자만 접근 허용
+      if (user.email !== ADMIN_EMAIL) {
+        box.innerHTML = `<div class="msg error">관리자만 볼 수 있는 페이지입니다.</div>`;
+        return;
+      }
+
+      // 관리자 RLS 정책 덕분에 모든 주문 / 모든 프로필을 조회할 수 있습니다.
+      const [ordersRes, profilesRes] = await Promise.all([
+        sb.from("orders").select("user_id, amount, status, created_at, products(name)").order("created_at", { ascending: false }),
+        sb.from("profiles").select("id, email"),
+      ]);
+
+      if (ordersRes.error) {
+        box.innerHTML = `<div class="msg error">${ordersRes.error.message}</div>`;
+        return;
+      }
+
+      const orders = ordersRes.data;
+      // user_id → 이메일 매핑
+      const emailById = {};
+      (profilesRes.data || []).forEach((p) => (emailById[p.id] = p.email));
+
+      const paidTotal = orders
+        .filter((o) => o.status === "PAID")
+        .reduce((sum, o) => sum + o.amount, 0);
+
+      if (!orders.length) {
+        box.innerHTML = `<div class="empty">결제 내역이 없습니다.</div>`;
+        return;
+      }
+
+      box.innerHTML = `
+        <p class="hint" style="text-align:left;">전체 주문 ${orders.length}건 · 결제완료 매출 합계 <b>${won(paidTotal)}</b></p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>구매자</th><th>상품</th><th>금액</th><th>상태</th><th>일시</th></tr>
+            </thead>
+            <tbody>
+              ${orders
+                .map(
+                  (o) => `<tr>
+                    <td>${escapeHtml(emailById[o.user_id] || o.user_id)}</td>
+                    <td>${o.products ? escapeHtml(o.products.name) : "(삭제된 상품)"}</td>
+                    <td>${won(o.amount)}</td>
+                    <td>${statusLabel(o.status)}</td>
+                    <td>${formatDate(o.created_at)}</td>
+                  </tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+      );
+    }
+  </script>
+</body>
+</html>

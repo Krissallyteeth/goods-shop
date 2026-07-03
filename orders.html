@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 결제내역 · 굿즈 샵</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="page-title">내 결제내역</h1>
+    <div id="content"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    renderNav("orders.html");
+    load();
+
+    async function load() {
+      const user = await requireLogin();
+      if (!user) return;
+
+      // RLS 덕분에 본인 주문만 조회됩니다.
+      const { data: orders, error } = await sb
+        .from("orders")
+        .select("amount, status, created_at, products(name)")
+        .order("created_at", { ascending: false });
+
+      const box = document.getElementById("content");
+      if (error) {
+        box.innerHTML = `<div class="msg error">${error.message}</div>`;
+        return;
+      }
+      if (!orders.length) {
+        box.innerHTML = `<div class="empty">아직 결제한 상품이 없어요.<br /><a class="btn" style="max-width:200px;margin:16px auto;" href="index.html">상품 보러가기</a></div>`;
+        return;
+      }
+
+      box.innerHTML = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>상품</th><th>금액</th><th>상태</th><th>결제일시</th></tr>
+            </thead>
+            <tbody>
+              ${orders
+                .map(
+                  (o) => `<tr>
+                    <td>${o.products ? escapeHtml(o.products.name) : "(삭제된 상품)"}</td>
+                    <td>${won(o.amount)}</td>
+                    <td>${statusLabel(o.status)}</td>
+                    <td>${formatDate(o.created_at)}</td>
+                  </tr>`
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+      );
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>결제 실패 · 굿즈 샵</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="center-box">
+      <div class="icon">❌</div>
+      <h1>결제가 취소되었어요</h1>
+      <p id="reason">결제가 완료되지 않았습니다.</p>
+      <a class="btn" href="index.html">상품으로 돌아가기</a>
+    </div>
+  </div>
+
+  <script>
+    // 토스가 전달한 실패 사유를 보여줍니다.
+    const q = new URLSearchParams(location.search);
+    const message = q.get("message");
+    if (message) document.getElementById("reason").textContent = message;
+  </script>
+</body>
+</html>
