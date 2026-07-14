@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="turingshop">
+  <!-- 배경: 브랜드 보라, 앱 아이콘용 둥근 모서리 -->
+  <rect width="512" height="512" rx="112" fill="#6c5ce7"/>
+  <!-- 쇼핑백 손잡이 (흰색 선) -->
+  <g fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round">
+    <path d="M196,204 C196,150 246,150 246,204"/>
+    <path d="M266,204 C266,150 316,150 316,204"/>
+  </g>
+  <!-- 쇼핑백 몸통 (흰색) -->
+  <rect x="156" y="200" width="200" height="196" rx="24" fill="#ffffff"/>
+  <!-- 'T' 모노그램 (보라 knockout) -->
+  <g fill="#6c5ce7">
+    <rect x="196" y="250" width="120" height="28" rx="8"/>
+    <rect x="242" y="250" width="28" height="112" rx="8"/>
+  </g>
+</svg>

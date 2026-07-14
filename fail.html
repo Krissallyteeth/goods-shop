@@ -2,9 +2,15 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>결제 실패 · 굿즈 샵</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#6c5ce7" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="turingshop" />
 </head>
 <body>
   <div class="container">
@@ -22,5 +28,6 @@
     const message = q.get("message");
     if (message) document.getElementById("reason").textContent = message;
   </script>
+  <script src="pwa.js"></script>
 </body>
 </html>
