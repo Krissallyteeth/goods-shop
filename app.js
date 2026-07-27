@@ -70,7 +70,7 @@ async function renderNav(active) {
   const nav = document.createElement("header");
   nav.className = "nav";
   nav.innerHTML =
-    `<a href="index.html" class="brand">🛍️ 굿즈 샵</a>` +
+    `<a href="index.html" class="brand">🛍️ 굿즈샵</a>` +
     `<nav>${link("index.html", "상품")}${right}</nav>`;
   document.body.prepend(nav);
 }

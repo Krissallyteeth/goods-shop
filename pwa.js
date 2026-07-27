@@ -44,7 +44,7 @@ if ("serviceWorker" in navigator) {
     e.preventDefault(); // 브라우저 기본 미니 배너 막고
     deferredPrompt = e; // 나중에 우리가 prompt() 호출
     showBanner(
-      `<span class="pwa-text">turingshop을 홈 화면에 추가할까요?</span>
+      `<span class="pwa-text">굿즈샵을 홈 화면에 추가할까요?</span>
        <span class="pwa-actions">
          <button class="btn" id="pwa-add" style="width:auto;min-height:40px;padding:8px 16px;">추가</button>
          <button class="btn secondary" id="pwa-later" style="width:auto;min-height:40px;padding:8px 16px;">나중에</button>

@@ -1,6 +1,6 @@
 {
-  "name": "turingshop",
-  "short_name": "turingshop",
+  "name": "굿즈샵",
+  "short_name": "굿즈샵",
   "description": "굿즈를 구경하고 바로 구매하는 샵",
   "lang": "ko",
   "start_url": "./index.html",
