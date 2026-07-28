@@ -52,7 +52,13 @@ function formatDate(iso) {
 
 // 상단 네비게이션을 그립니다. (로그인 상태·관리자 여부에 따라 메뉴가 달라짐)
 async function renderNav(active) {
-  const user = await getUser();
+  // 백엔드(Supabase)가 응답하지 않아도 내비게이션은 떠야 하므로, 실패 시 비로그인으로 취급.
+  let user = null;
+  try {
+    user = await getUser();
+  } catch {
+    user = null;
+  }
   const isAdmin = user && user.email === ADMIN_EMAIL;
   const link = (href, label) =>
     `<a href="${href}" class="${active === href ? "active" : ""}">${label}</a>`;
