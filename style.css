@@ -181,6 +181,9 @@ tr:last-child td { border-bottom: none; }
 .center-box .btn { margin-top: 20px; }
 
 h1.page-title { font-size: 1.4rem; margin: 8px 0 20px; }
+/* 섹션 제목 (인기 상품 / 전체 상품) */
+h2.section-title { font-size: 1.1rem; margin: 28px 0 12px; }
+section > h2.section-title:first-child { margin-top: 0; }
 .empty { text-align: center; color: var(--muted); padding: 48px 16px; }
 
 /* ===== PWA "홈 화면에 추가" 안내 배너 (하단 고정) ===== */

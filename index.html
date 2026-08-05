@@ -15,6 +15,14 @@
 <body>
   <div class="container">
     <h1 class="page-title">상품</h1>
+
+    <!-- 인기 상품: products.is_popular = true 인 것만. 없으면 섹션 자체를 숨깁니다. -->
+    <section id="popular-section" style="display:none;">
+      <h2 class="section-title">🔥 인기 상품</h2>
+      <div id="popular" class="grid"></div>
+    </section>
+
+    <h2 class="section-title">전체 상품</h2>
     <div id="products" class="grid"></div>
     <div id="empty" class="empty" style="display:none;">상품이 없습니다.</div>
   </div>
@@ -45,26 +53,35 @@
           return;
         }
 
-        box.innerHTML = products
-          .map(
-            (p) => `
-            <div class="card">
-              <img src="${p.image_url}" alt="${escapeHtml(p.name)}" loading="lazy" />
-              <div class="body">
-                <h3>${escapeHtml(p.name)}</h3>
-                <p class="desc">${escapeHtml(p.description || "")}</p>
-                <div class="price">${won(p.price)}</div>
-                <button class="btn" onclick='buy(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${p.price})'>바로 구매</button>
-                <button class="btn secondary">장바구니 담기</button>
-                <button class="btn secondary">취소</button>
-              </div>
-            </div>`
-          )
-          .join("");
+        // 인기 상품(is_popular=true)이 하나라도 있으면 위쪽 섹션을 보여줍니다.
+        // (컬럼이 아직 없으면 값이 undefined 라 그냥 섹션이 안 뜹니다.)
+        const popular = products.filter((p) => p.is_popular);
+        if (popular.length) {
+          document.getElementById("popular").innerHTML = popular.map(productCard).join("");
+          document.getElementById("popular-section").style.display = "block";
+        }
+
+        box.innerHTML = products.map(productCard).join("");
       } catch (e) {
         // 네트워크/서버 장애(예: Supabase 일시정지)로 요청 자체가 실패한 경우 — 백지 대신 안내.
         box.innerHTML = `<div class="msg error">상품을 불러오지 못했습니다. 잠시 후 다시 시도해주세요. (${e.message || "네트워크/서버 오류"})</div>`;
       }
+    }
+
+    // 상품 카드 하나를 HTML 로 만듭니다. (인기 상품 · 전체 상품이 같이 씁니다)
+    function productCard(p) {
+      return `
+        <div class="card">
+          <img src="${p.image_url}" alt="${escapeHtml(p.name)}" loading="lazy" />
+          <div class="body">
+            <h3>${escapeHtml(p.name)}</h3>
+            <p class="desc">${escapeHtml(p.description || "")}</p>
+            <div class="price">${won(p.price)}</div>
+            <button class="btn" onclick='buy(${JSON.stringify(p.id)}, ${JSON.stringify(p.name)}, ${p.price})'>바로 구매</button>
+            <button class="btn secondary">장바구니 담기</button>
+            <button class="btn secondary">취소</button>
+          </div>
+        </div>`;
     }
 
     async function buy(productId, productName, price) {
